@@ -6,12 +6,28 @@ import string
 import argparse
 from daemon import Daemon
 import os
+from os.path import isfile
 import smtplib
- 
+import imp
 from email import Encoders
 from email.MIMEBase import MIMEBase
 from email.MIMEMultipart import MIMEMultipart
 from email.Utils import formatdate
+
+def use_plugin(name, path, globals=None, locals=None, fromlist=None):
+# source: http://technogeek.org/python-module.html
+	try:
+		return sys.modules[name]
+	except KeyError:
+		pass
+
+	fp, pathname, description = imp.find_module(name, [path])
+	
+	try:
+		return imp.load_module(name, fp, pathname, description)
+	finally:
+		if fp:
+			fp.close()
 
 def cmd():
 	parser = argparse.ArgumentParser()
@@ -30,12 +46,15 @@ def cmd():
 	parser.add_argument('-server', action='store', dest='m_server', help='Mail server')
 	parser.add_argument('-username', action='store', dest='m_username', help='Mail username')
 	parser.add_argument('-password', action='store', dest='m_password', help='Mail password')
-
+#plugin
+	parser.add_argument('-plugin', action='store', dest='plugin', help='used logging plugin', default="bot_sqlite")
 	
 	return parser.parse_args()
 
 def bot():
 	global args
+	global base_path
+	
 # -s
 	HOST="irc.freenode.net"
 	if (args.server):
@@ -68,7 +87,13 @@ def bot():
 	IRCsocket.send("USER %s %s bla :%s\r\n" % (IDENT, HOST, REALNAME))
 	IRCsocket.send("JOIN #%s\r\n" % CHANNEL)
 	
-	database = ""
+	
+	database = os.path.dirname(base_path) + "log.db"
+	db = use_plugin(args.plugin, os.path.dirname(base_path))
+	
+	if not isfile(database):
+		db.create(database)
+		
 	buffer = ""
 	online = set()
 	while 1:
@@ -86,7 +111,7 @@ def bot():
 				IRCsocket.send("PONG %s\r\n" % msg[1])
 			
 			elif ((msg[1] == "PRIVMSG") & (msg[2] == NICK)):
-				"add msg to db"
+				db.add(database, msg[1], msg[0].split("!")[0][1:], " ".join(msg[3:]))
 				
 				if (msg[3][1:] == "mail"):
 					if (args.m_address & args.m_server):
@@ -115,13 +140,16 @@ def bot():
 				
 				elif (msg[3][1:] == "when"):
 					if len(msg) > 3:
-						print "seen"
+						if msg[4] in online:
+							IRCsocket.send("PRIVMSG %s :%s is now online\r\n" % (msg[0].split("!")[0][1:], msg[4]))
+						else:
+							IRCsocket.send("PRIVMSG %s :%s was last seen %s\r\n" % (msg[0].split("!")[0][1:], msg[4], db.seen(database, msg[4])))
+						
 			elif (msg[1] == "JOIN"):
-				print "join"
+				db.add(database, msg[1], msg[0].split("!")[0][1:], msg[2])
 				online.add(msg[0].split("!")[0][1:])
-				
 			elif (msg[1] == "PART"):
-				print "part"
+				db.add(database, msg[1], msg[0].split("!")[0][1:], msg[2])
 				online.discard(msg[0].split("!")[0][1:])
 				
 			elif ((msg[2] == NICK) & (len(msg)>3)):
@@ -140,7 +168,9 @@ if __name__ == "__main__":
 	daemon = MyDaemon('/tmp/daemon-example.pid')
 	global args 
 	args = cmd()
-
+	global base_path
+	base_path = sys.argv[0]
+	
 	if not args.deactivate_deamon:
 		daemon.start()
 	else:
