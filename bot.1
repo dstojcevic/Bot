@@ -1,0 +1,40 @@
+.\" Process this file with
+.\" groff -man -Tascii foo.1
+.\"
+.TH BOT 1 "MAY 2011" Linux "User Manuals"
+.SH NAME
+Bot \- simple IRC bot
+.SH SYNOPSIS
+.B bot.py [-s HOST] [-p PORT] ...
+.SH DESCRIPTION
+.B bot
+for logging messages in irc chats. Also for sending these log to a user per email or telling the last known activity of a particular user.
+.SH OPTIONS
+.IP "-h, --help"
+show this help message and exit
+.IP "-s SERVER"
+Set IRC server
+.IP "-p PORT"
+Set IRC port
+.IP "-n NICK"
+Set IRC nick
+.IP "-i IDENT"
+Set IRC ident
+.IP "-r REAL"
+Set IRC real name
+.IP "-c CHANNEL"
+Set IRC channel
+.IP "-D"
+Deactivate deamon
+.IP "-address M_ADDRESS"
+Mail address
+.IP "-server M_SERVER"
+Mail server
+.IP "-username M_USERNAME"
+Mail username
+.IP "-password M_PASSWORD"
+Mail password
+.IP "-plugin PLUGIN"
+used logging plugin
+.SH AUTHOR
+Daniel Stojcevic <daniel.stojcevic at googlemail dot com>
