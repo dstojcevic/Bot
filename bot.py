@@ -5,8 +5,13 @@ import socket
 import string
 import argparse
 from daemon import Daemon
-
-#args = ""
+import os
+import smtplib
+ 
+from email import Encoders
+from email.MIMEBase import MIMEBase
+from email.MIMEMultipart import MIMEMultipart
+from email.Utils import formatdate
 
 def cmd():
 	parser = argparse.ArgumentParser()
@@ -20,6 +25,12 @@ def cmd():
 	parser.add_argument('-c', action='store', dest='channel', help='Set IRC channel')
 # daemon
 	parser.add_argument('-D', action='store_true', default=False, dest='deactivate_deamon', help='Deactivate deamon')
+# mail
+	parser.add_argument('-address', action='store', dest='m_address', help='Mail address')
+	parser.add_argument('-server', action='store', dest='m_server', help='Mail server')
+	parser.add_argument('-username', action='store', dest='m_username', help='Mail username')
+	parser.add_argument('-password', action='store', dest='m_password', help='Mail password')
+
 	
 	return parser.parse_args()
 
@@ -57,6 +68,7 @@ def bot():
 	IRCsocket.send("USER %s %s bla :%s\r\n" % (IDENT, HOST, REALNAME))
 	IRCsocket.send("JOIN #%s\r\n" % CHANNEL)
 	
+	database = ""
 	buffer = ""
 	online = set()
 	while 1:
@@ -77,8 +89,29 @@ def bot():
 				"add msg to db"
 				
 				if (msg[3][1:] == "mail"):
-					if len(msg) > 3:
-						print "send email"
+					if (args.m_address & args.m_server):
+						if len(msg) > 3:
+							mail = MIMEMultipart()
+							mail["From"] = args.m_address
+							mail["To"] = msg[4]
+							mail["Subject"] = "IRC Log"
+							mail['Date'] = formatdate(localtime=True)
+						 
+							part = MIMEBase('application', "octet-stream")
+							part.set_payload( open(database,"rb").read() )
+							Encoders.encode_base64(part)
+							part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(database))
+							mail.attach(part)
+						 
+							server = smtplib.SMTP(args.m_server)
+							if (args.m_username & args.m_password):
+								server.login(args.m_username, args.m_password)
+
+							try:
+								failed = server.sendmail(args.m_address, msg[4], mail.as_string())
+								server.close()
+							except Exception, e:
+								errorMsg = "Unable to send email. Error: %s" % str(e)
 				
 				elif (msg[3][1:] == "when"):
 					if len(msg) > 3:
