@@ -1,0 +1,21 @@
+README
+This bot is used to log messages in irc chats, sending these logs to email addresses and checking the last encounter with user.
+
+usage: bot.py [-h] [-s SERVER] [-p PORT] [-n NICK] [-i IDENT] [-r REAL]
+                [-c CHANNEL] [-D] [-address M_ADDRESS] [-server M_SERVER]
+                [-username M_USERNAME] [-password M_PASSWORD] [-plugin PLUGIN]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SERVER             Set IRC server
+  -p PORT               Set IRC port
+  -n NICK               Set IRC nick
+  -i IDENT              Set IRC ident
+  -r REAL               Set IRC real name
+  -c CHANNEL            Set IRC channel
+  -D                    Deactivate deamon
+  -address M_ADDRESS    Mail address
+  -server M_SERVER      Mail server
+  -username M_USERNAME  Mail username
+  -password M_PASSWORD  Mail password
+  -plugin PLUGIN        used logging plugin

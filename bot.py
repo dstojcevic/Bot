@@ -114,7 +114,7 @@ def bot():
 				db.add(database, msg[1], msg[0].split("!")[0][1:], " ".join(msg[3:]))
 				
 				if (msg[3][1:] == "mail"):
-					if (args.m_address & args.m_server):
+					if ((args.m_address) & (args.m_server)):
 						if len(msg) > 3:
 							mail = MIMEMultipart()
 							mail["From"] = args.m_address
