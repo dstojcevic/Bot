@@ -1,30 +1,29 @@
+#!/usr/bin/env python
+ 
 import sys, time
 import socket
 import string
 import argparse
+from daemon import Daemon
+
+#args = ""
 
 def cmd():
 	parser = argparse.ArgumentParser()
 
 # IRC
-	parser.add_argument('-s', action='store', dest='server',
-						help='Set IRC server')
-	parser.add_argument('-p', action='store', dest='port',
-						help='Set IRC port')
-	parser.add_argument('-n', action='store', dest='nick',
-						help='Set IRC nick')
-	parser.add_argument('-i', action='store', dest='ident',
-						help='Set IRC ident')
-	parser.add_argument('-r', action='store', dest='real',
-						help='Set IRC real name')
+	parser.add_argument('-s', action='store', dest='server', help='Set IRC server')
+	parser.add_argument('-p', action='store', dest='port', help='Set IRC port')
+	parser.add_argument('-n', action='store', dest='nick', help='Set IRC nick')
+	parser.add_argument('-i', action='store', dest='ident', help='Set IRC ident')
+	parser.add_argument('-r', action='store', dest='real', help='Set IRC real name')
 # daemon
-	parser.add_argument('-D', action='store_false', default=True,
-						dest='deactivate_daemon',
-						help='Deactivate deamon')
+	parser.add_argument('-D', action='store_true', default=False, dest='deactivate_deamon', help='Deactivate deamon')
 	
 	return parser.parse_args()
 
-def bot(args):
+def bot():
+	global args
 # -s
 	HOST="irc.freenode.net"
 	if (args.server):
@@ -46,8 +45,6 @@ def bot(args):
 	if (args.real):
 		REALNAME=args.real
 	
-	print args
-	print HOST
 	#server connect 
 	IRCsocket=socket.socket()
 	IRCsocket.connect((HOST, PORT))
@@ -56,6 +53,18 @@ def bot(args):
 	IRCsocket.send("JOIN #irclib\r\n")
 	IRCsocket.send("QUIT\r\n")
 	
+
+class MyDaemon(Daemon):
+		def run(self):
+			bot()
+
 if __name__ == "__main__":
+	daemon = MyDaemon('/tmp/daemon-example.pid')
+	global args 
 	args = cmd()
-	bot(args)
+
+	if not args.deactivate_deamon:
+		daemon.start()
+	else:
+		bot()
+	sys.exit(0)
