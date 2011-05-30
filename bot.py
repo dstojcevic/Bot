@@ -114,29 +114,31 @@ def bot():
 				db.add(database, msg[1], msg[0].split("!")[0][1:], " ".join(msg[3:]))
 				
 				if (msg[3][1:] == "mail"):
-					if ((args.m_address) & (args.m_server)):
-						if len(msg) > 3:
-							mail = MIMEMultipart()
-							mail["From"] = args.m_address
-							mail["To"] = msg[4]
-							mail["Subject"] = "IRC Log"
-							mail['Date'] = formatdate(localtime=True)
-						 
-							part = MIMEBase('application', "octet-stream")
-							part.set_payload( open(database,"rb").read() )
-							Encoders.encode_base64(part)
-							part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(database))
-							mail.attach(part)
-						 
-							server = smtplib.SMTP(args.m_server)
-							if (args.m_username & args.m_password):
-								server.login(args.m_username, args.m_password)
+					if args.m_address:
+						if args.m_server:
+							if len(msg) > 3:
+								mail = MIMEMultipart()
+								mail["From"] = args.m_address
+								mail["To"] = msg[4]
+								mail["Subject"] = "IRC Log"
+								mail['Date'] = formatdate(localtime=True)
+							 
+								part = MIMEBase('application', "octet-stream")
+								part.set_payload( open(database,"rb").read() )
+								Encoders.encode_base64(part)
+								part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(database))
+								mail.attach(part)
+							 
+								server = smtplib.SMTP(args.m_server)
+								if args.m_username:
+									if args.m_password:
+										server.login(args.m_username, args.m_password)
 
-							try:
-								failed = server.sendmail(args.m_address, msg[4], mail.as_string())
-								server.close()
-							except Exception, e:
-								errorMsg = "Unable to send email. Error: %s" % str(e)
+								try:
+									failed = server.sendmail(args.m_address, msg[4], mail.as_string())
+									server.close()
+								except Exception, e:
+									errorMsg = "Unable to send email. Error: %s" % str(e)
 				
 				elif (msg[3][1:] == "when"):
 					if len(msg) > 3:
